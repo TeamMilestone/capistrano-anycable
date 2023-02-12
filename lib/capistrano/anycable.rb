@@ -26,7 +26,7 @@ module Capistrano
       backend.upload! compiled_template_anycable(from, role), to
     end
 
-    PumaBind = Struct.new(:full_address, :kind, :address) do
+    AnycableBind = Struct.new(:full_address, :kind, :address) do
       def unix?
         kind == :unix
       end
@@ -43,7 +43,7 @@ module Capistrano
         if unix?
           self
         else
-          PumaBind.new(
+          AnycableBind.new(
             localize_address(full_address),
             kind,
             localize_address(address)
@@ -58,10 +58,10 @@ module Capistrano
       end
     end
 
-    def puma_binds
-      Array(fetch(:puma_bind)).map do |m|
+    def anycable_binds
+      Array(fetch(:anycable_bind)).map do |m|
         etype, address  = /(tcp|unix|ssl):\/{1,2}(.+)/.match(m).captures
-        PumaBind.new(m, etype.to_sym, address)
+        AnycableBind.new(m, etype.to_sym, address)
       end
     end
   end
@@ -72,8 +72,8 @@ module Capistrano
     def set_defaults
       set_if_empty :anycable_role, :web
       set_if_empty :anycable_env, -> { fetch(:rack_env, fetch(:rails_env, fetch(:stage))) }
-      set_if_empty :anycable_access_log, -> { File.join(shared_path, 'log', "puma.log") }
-      set_if_empty :anycable_error_log, -> { File.join(shared_path, 'log', "puma.log") }
+      set_if_empty :anycable_access_log, -> { File.join(shared_path, 'log', "anycable.log") }
+      set_if_empty :anycable_error_log, -> { File.join(shared_path, 'log', "anycable.log") }
 
       # Chruby, Rbenv and RVM integration
       append :chruby_map_bins, 'anycable', 'anycablectl' if fetch(:chruby_map_bins)
