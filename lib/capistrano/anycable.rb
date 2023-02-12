@@ -2,42 +2,8 @@ require 'capistrano/bundler'
 require 'capistrano/plugin'
 
 module Capistrano
-  module PumaCommon
-    def puma_switch_user(role, &block)
-      user = puma_user(role)
-      if user == role.user
-        block.call
-      else
-        backend.as user do
-          block.call
-        end
-      end
-    end
-
-    def puma_user(role)
-      properties = role.properties
-      properties.fetch(:puma_user) || # local property for puma only
-          fetch(:puma_user) ||
-          properties.fetch(:run_as) || # global property across multiple capistrano gems
-          role.user
-    end
-
-    def puma_bind
-      Array(fetch(:puma_bind)).collect do |bind|
-        "bind '#{bind}'"
-      end.join("\n")
-    end
-
-    def service_unit_type
-      ## Jruby don't support notify
-      return "simple" if RUBY_ENGINE == "jruby"
-      fetch(:puma_service_unit_type,
-      ## Check if sd_notify is available in the bundle
-        Gem::Specification.find_all_by_name("sd_notify").any? ? "notify" : "simple")
-
-    end
-
-    def compiled_template_puma(from, role)
+  module AnycableCommon
+    def compiled_template_anycable(from, role)
       @role = role
       file = [
           "lib/capistrano/templates/#{from}-#{role.hostname}-#{fetch(:stage)}.rb",
@@ -56,8 +22,8 @@ module Capistrano
       StringIO.new(ERB.new(erb, trim_mode: '-').result(binding))
     end
 
-    def template_puma(from, to, role)
-      backend.upload! compiled_template_puma(from, role), to
+    def template_anycable(from, to, role)
+      backend.upload! compiled_template_anycable(from, role), to
     end
 
     PumaBind = Struct.new(:full_address, :kind, :address) do
@@ -100,24 +66,24 @@ module Capistrano
     end
   end
 
-  class Puma < Capistrano::Plugin
-    include PumaCommon
+  class Anycable < Capistrano::Plugin
+    include AnycableCommon
 
     def set_defaults
-      set_if_empty :puma_role, :web
-      set_if_empty :puma_env, -> { fetch(:rack_env, fetch(:rails_env, fetch(:stage))) }
-      set_if_empty :puma_access_log, -> { File.join(shared_path, 'log', "puma.log") }
-      set_if_empty :puma_error_log, -> { File.join(shared_path, 'log', "puma.log") }
+      set_if_empty :anycable_role, :web
+      set_if_empty :anycable_env, -> { fetch(:rack_env, fetch(:rails_env, fetch(:stage))) }
+      set_if_empty :anycable_access_log, -> { File.join(shared_path, 'log', "puma.log") }
+      set_if_empty :anycable_error_log, -> { File.join(shared_path, 'log', "puma.log") }
 
       # Chruby, Rbenv and RVM integration
-      append :chruby_map_bins, 'puma', 'pumactl' if fetch(:chruby_map_bins)
-      append :rbenv_map_bins, 'puma', 'pumactl' if fetch(:rbenv_map_bins)
-      append :rvm_map_bins, 'puma', 'pumactl' if fetch(:rvm_map_bins)
+      append :chruby_map_bins, 'anycable', 'anycablectl' if fetch(:chruby_map_bins)
+      append :rbenv_map_bins, 'anycable', 'anycablectl' if fetch(:rbenv_map_bins)
+      append :rvm_map_bins, 'anycable', 'anycablectl' if fetch(:rvm_map_bins)
 
       # Bundler integration
-      append :bundle_bins, 'puma', 'pumactl'
+      append :bundle_bins, 'anycable', 'anycablectl'
     end
   end
 end
 
-require 'capistrano/puma/systemd'
+require 'capistrano/anycable/systemd'

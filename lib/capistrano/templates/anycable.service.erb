@@ -1,0 +1,34 @@
+# This file tells systemd how to run Anycable as a 24/7 long-running daemon.
+#
+# Customize this file based on your bundler location, app directory, etc.
+# Customize and copy this into /usr/lib/systemd/system (CentOS) or /lib/systemd/system (Ubuntu).
+# Then run:
+#   - systemctl enable <%= fetch(:anycable_service_unit_name) %>
+#   - systemctl {start,stop,restart} <%= fetch(:anycable_service_unit_name) %>
+#
+#
+# Use `journalctl -u <%= fetch(:anycable_service_unit_name) %> -rn 100` to view the last 100 lines of log output.
+#
+
+# /etc/systemd/system/anycable-rpc.service
+
+[Unit]
+Description=AnyCable gRPC Server
+After=syslog.target network.target
+
+[Service]
+Type=simple
+Environment=RAILS_ENV=production
+WorkingDirectory=<%= current_path %>
+ExecStart=<%= expanded_bundle_command %> exec anycable
+ExecStop=/bin/kill -TERM $MAINPID
+
+Restart=on-failure
+
+
+# Configure WebSocket server using env vars (see Configuration guide)
+# Environment=ANYCABLE_REDIS_URL=redis://localhost:6379/5
+# Environment=ANYCABLE_REDIS_CHANNEL=__anycable__
+
+[Install]
+WantedBy=multi-user.target
