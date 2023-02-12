@@ -21,11 +21,14 @@ Type=simple
 User=ubuntu
 Environment=RAILS_ENV=production
 WorkingDirectory=<%= current_path %>
-ExecStart=<%= expanded_bundle_command %> exec anycable
+ExecStart=<%= expanded_bundle_command %> exec --keep-file-descriptors anycable
 ExecStop=/bin/kill -TERM $MAINPID
+ExecReload=/bin/kill -USR1 $MAINPID
 
 Restart=on-failure
 
+StandardOutput=<%= anycable_access_log %>
+StandardError=<%= anycable_error_log %>
 
 # Configure WebSocket server using env vars (see Configuration guide)
 # Environment=ANYCABLE_REDIS_URL=redis://localhost:6379/5
