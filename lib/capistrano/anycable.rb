@@ -25,45 +25,6 @@ module Capistrano
     def template_anycable(from, to, role)
       backend.upload! compiled_template_anycable(from, role), to
     end
-
-    AnycableBind = Struct.new(:full_address, :kind, :address) do
-      def unix?
-        kind == :unix
-      end
-
-      def ssl?
-        kind == :ssl
-      end
-
-      def tcp
-        kind == :tcp || ssl?
-      end
-
-      def local
-        if unix?
-          self
-        else
-          AnycableBind.new(
-            localize_address(full_address),
-            kind,
-            localize_address(address)
-          )
-        end
-      end
-
-      private
-
-      def localize_address(address)
-        address.gsub(/0\.0\.0\.0(.+)/, "127.0.0.1\\1")
-      end
-    end
-
-    def anycable_binds
-      Array(fetch(:anycable_bind)).map do |m|
-        etype, address  = /(tcp|unix|ssl):\/{1,2}(.+)/.match(m).captures
-        AnycableBind.new(m, etype.to_sym, address)
-      end
-    end
   end
 
   class Anycable < Capistrano::Plugin
