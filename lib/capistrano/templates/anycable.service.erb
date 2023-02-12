@@ -18,6 +18,7 @@ After=syslog.target network.target
 
 [Service]
 Type=simple
+User=ubuntu
 Environment=RAILS_ENV=production
 WorkingDirectory=<%= current_path %>
 ExecStart=<%= expanded_bundle_command %> exec anycable
